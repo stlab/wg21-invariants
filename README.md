@@ -1,6 +1,6 @@
 # Invariants in C++
 
-To generate the latest version of the paper, run:
+**To generate the latest version of the paper, first install the `mpark/wg21` dependencies, specified [here](https://github.com/mpark/wg21#requirements).**
 
 ```bash
 make paper.pdf
