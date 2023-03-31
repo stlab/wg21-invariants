@@ -22,7 +22,7 @@ toc-depth: 4
 
 # Executive Summary
 
-We propose a model for expressing class invariants in C++, to be added to the so-called _Contracts MVP_. We believe this facility, or one with comparable semantics, is necessary to support minimum viable contracts support in C++. In short, we propose a class-scope keyword `invariant`, which opens a scope that has `const` access to `*this`. Each invariant block is to be evaluated (in unspecified order) at the exit of every public constructor and non-const member function, as if it were a postcondition.
+We propose a model for expressing class invariants in C++, to be added to the so-called _Contracts MVP_. We believe this facility, or one with comparable semantics, is necessary to support minimum viable contracts support in C++. In short, we propose a class-scope keyword `invariant`, which opens a scope that has `const` access to `*this`. Each invariant block is to be evaluated (in unspecified order) at the exit of every public constructor and public non-const member function, as if it were a postcondition.
 
 ```cpp
 class type {
