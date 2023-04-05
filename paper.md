@@ -6,10 +6,10 @@ audience: SG21
 author:
   - name: Nick DeMarco
     email: <demarco@adobe.com>
-  - name: Rani Kumar
-    email: <ranik@adobe.com>
   - name: Sean Parent
     email: <sparent@adobe.com>
+  - name: David Sankel
+    email: <dsankel@adobe.com>
 toc: true
 toc-depth: 4
 ---
@@ -22,7 +22,25 @@ toc-depth: 4
 
 # Executive Summary
 
-We propose a model for expressing class invariants in C++, to be added to the so-called _Contracts MVP_. We believe this facility, or one with comparable semantics, is necessary to support minimum viable contracts support in C++. In short, we propose a class-scope keyword `invariant`, which opens a scope that has `const` access to `*this`. Each invariant block is to be evaluated (in unspecified order) at the exit of every public constructor and public non-const member function, as if it were a postcondition.
+We propose semantics for class invariants in C++, independent of a particular syntax. Additionally, we identify a set of standard library functions which are necessary to test class invariants in situations where implicit checks are impossible for a compiler to generate. Finally, we provide illustrative examples with a syntax inspired by [@P2461].
+
+# Semantic Principles
+
+TODO: Preamble
+
+1. Invariants are checked as if they were postconditions of public constructors and non-`const` member functions.
+2. Invariants only have access to a `const *this`.
+3. Invariants have private access.
+
+## Motivation
+
+1. Conceptually, a class invariant is a property which holds whenever the state of a class instance is _observed_ by code outside of that class's definition. (TODO: How do we handle public member access? That's observable too, and we don't have a model for enforcing invariants after, say, `mystruct.field = -1`)
+
+2. Invariants are simply expressions of constraints, and therefore have no need to modify the class instances they constrain. Outright modificiations of objects during an invariant test are unidiomatic at best. 
+
+3. Clearly, invariants must be able to express constraints on the private state of class instances. We cannot imagine a useful implementation of invariants that lacks this property.
+
+# Example
 
 ```cpp
 class type {
@@ -33,34 +51,6 @@ invariant { 0 <= _x }
 invariant { _x <= _y }
 };
 ```
-
-By expressing these as invariants, rather than as postconditions of member functions, we avoid the issue of infinite recursion described in [@p2388r4] (§9.5). This issue appears to demonstrate the infeasibility of implementing class invariants in terms of postconditions, and justifies the need for direct invariant support in an adequate _Contracts MVP_.
-
-# Introduction
-
-[@P2817R0]
-
-# Motivation and Scope
-
-# Before/After Comparisons
-
-## Comparison 1
-
-::: tonytable
-
-### Before
-```cpp
-void before() {}
-```
-
-### After
-```cpp
-void after() {}
-```
-
-:::
-
-# Design Overview
 
 # Acknowledgements
 

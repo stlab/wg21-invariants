@@ -1,0 +1,100 @@
+Contracts:
+
+    test_invariants just returns a bool: did the tests passed
+    verify_ is "as if" the compiler checked the invariant, and would proceed with the general policy (maybe std::abort, maybe log, w.e. the build specifies)
+
+    Could see validate_invariant being misused - I have this object, let me call validate_ on it; clarify: this is only invokable if you have private access and mutable access. Only need to verify_ after a place where you might have broken it
+    
+    Need this because there are times when you would have const-only but private access to a class. 
+
+    In a single threaded app, you don't need mutable access for data members, if you can guarantee the object is not going to be used on another thread; common on embedded situations.
+
+    Is there another place in the standard where a function needs private access to be called:
+
+        the way to think about it: the invariant itself is private.
+
+        The compiler can generate a function that returns a bool.
+
+    Wording for private access: reflection TS had to do this somewhere in there.
+
+    Our proposal doesn't have the 9.5 recursion problem because we're only checking after non-const member functions
+
+    the invariant itself can only call const member functions - doesn't have non-const access to the thing; inspection only.
+
+        Would those pre/posts be checked? Yes.
+
+        So we argue this paper would make it easier for folks to implement invariants without the risk of a post-condition on a const member function.
+
+        "It's just a convenience" - you can achieve this with judicious use of postconditions. 
+
+        "Check invariants implicitly, sprinkled on all of your non-const member functions"
+
+        Sankel: Might make sense to just propose Sean-style invariant checking, using postconditions.
+
+        Sean: expect exception stuff to get objections. "Don't check invariants in the case of exceptions"
+
+        Sankel: Useful to specify in words those things that are "truly invariants" and those that you can only check if the object is in a meaningful state.
+
+        Sean: an invariant is a property that holds true at a particular point in execution. 
+            For class invariants in particular, the class inv. holds anyplace the object is observed from the outside; 
+                implied: through a public interface.
+
+            There is "observed" and "observable"
+                in the case of a moved-from object, or an object post-exception, it can be observed, but it's UB? and incorrect to observe it
+                Observing it is the thing that violates correctness, before you even check invariants.
+            Invariants have to hold if it's observable from another thread, on a callback, etc.
+            
+            _Meyer_: It is not the object's responsibility to protect itself against incorrect use against threads
+                Unless an obj explicitly states its threadsafe, you can't access it from two threads.
+                Sean's rule: unless an object explicitly says it can be observed post-move or post-exception, you cannot.
+
+            Standard doesn't say you can only destroy or assign to a moved from object, and for post-exception objects.
+
+            See Sean's p2345
+
+            Look closer at what the standard says about objects post-exception. Library only requires the basic exception guarantee.
+
+                BEG says "the object still satisfies its invariants", not useful for generic programming. 
+                you can have a std::thread that satisfies its invariants, but isn't destructible. 
+
+            Would expect the standard says you can only assign or move to an object that
+
+            any object that throws during modification - only happens on assignment. There's only so many operations the standard requires on objects
+                Nick should verify this claim for himself.
+            
+            Sank: only mention of exceptions in the standard are w.r.t associative containers.
+
+            We should include a very concise summary of the model itself. 
+                Be explicit about: 
+                    "here are the following places where an inv could be viewed in violation"
+                    "for each of those, provide a rationale, and how a user can check the invariant if they have enough information to do so"
+                    If i want to create stronger guarnatees on my class, post-exception, what do I do? 
+                        Maybe I want to guarantee the strong exception guarantee. How do I do that?
+                    If I want to make this thing be thread safe, how do I do that?
+                    How do I guarantee my invariants hold when accessed from multiple threads?
+
+            We don't cover the cases that the compiler can't possibly insert the right checks.
+
+            Alternatives considered: checking invariants for all arguments
+                there's no way we know for the compiler to know which pieces of the arguments are being accessed that it might have access to.
+
+                given an invariant on T, if I pass a vector<T>, is the compiler expected to check the invariants on all of those?
+                    if I modify one object in the vector, and then call sort, what is the compiler expected to check? All of them?
+
+** Invariants
+  - Invariants are checked like post conditions, but only in non-const member
+    functions and constructors
+  - Invariants only have access to a const *this.
+  - Invariants have private access
+** Sean's principles
+  - Reference Parameters to functions that throw may only be destructed or
+    assigned to after the throw in a correct program.
+    - "Tainted by a throw"
+    - Unless otherwise specified
+  - Objects may only be destructed or assigned to after being moved from.
+    - "Tainted by a move"
+    - Unless otherwise specified
+      - Is this useful?
+      - Seems like not so much.
+      - Removing this "unless otherwise" gives you a lot of the benefits of
+        static analysis and SSA.            
